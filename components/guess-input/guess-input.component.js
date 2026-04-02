@@ -9,17 +9,28 @@ class GuessInputComponent extends Elemental {
     static template = /*html*/`
         <span class="guess-input__guess" data-class="{ 'guess-input__guess--correct': feedbackClass === 'guess-input__feedback--correct', 'guess-input__guess--incorrect': feedbackClass === 'guess-input__feedback--incorrect' }"><bind>guess</bind></span>
         <p class="guess-input__feedback" data-class="{ 'guess-input__feedback--correct': feedbackClass === 'guess-input__feedback--correct', 'guess-input__feedback--incorrect': feedbackClass === 'guess-input__feedback--incorrect' }" aria-live="polite"><bind>feedbackMessage</bind></p>
-        <form class="guess-input__form" data-submit="handleGuessClick(event)">
-            <input class="guess-input__field" type="text" pattern="[A-Za-z]+" data-input="onlyAllowLetterInput(event)" readonly/>
-        </form>
+        <if condition="!roundFinished">
+            <form class="guess-input__form" data-submit="handleGuessClick(event)">
+                <div class="guess-input__field" role="textbox" aria-readonly="true">
+                    <span><bind>currentInput</bind></span>
+                    <span class="guess-input__caret"></span>
+                </div>
+            </form>
+        </if>
+
+        <if condition="roundFinished">
+            <p class="guess-input__final-answer">The answer was: <strong><bind>answer</bind></strong></p>
+        </if>
     `;
 
     static defaultProps() {
         return {
             guess: '',
+            currentInput: '',
             feedbackMessage: '',
             feedbackClass: '',
             roundFinished: false,
+            answer: roundService.getState()?.answer.toUpperCase() || '',
         };
     }
 
@@ -28,10 +39,6 @@ class GuessInputComponent extends Elemental {
         if (resultModal?.showResult) {
             resultModal.showResult(message);
         }
-    }
-
-    getInputElement() {
-        return this.shadowRoot?.querySelector('.guess-input__field');
     }
 
     isRoundFinished() {
@@ -48,40 +55,37 @@ class GuessInputComponent extends Elemental {
             return;
         }
 
-        const input = this.getInputElement();
-        if (!input) return;
+        const currentInput = this.props?.currentInput || '';
 
         if (normalisedKey === KEY_DELETE) {
-            input.value = input.value.slice(0, -1);
+            this.setState((prev) => ({ ...prev, currentInput: currentInput.slice(0, -1) }));
             return;
         }
 
         if (/^[a-z]$/i.test(key)) {
-            input.value += key.toUpperCase();
+            this.setState((prev) => ({ ...prev, currentInput: `${currentInput}${key.toUpperCase()}` }));
         }
     }
 
     submitGuess() {
         if (this.isRoundFinished()) return;
 
-        const input = this.getInputElement();
-        if (!input) return;
-
-        const guess = input.value.trim().toUpperCase();
+        const guess = String(this.props?.currentInput || '').trim().toUpperCase();
         if (!guess) return;
 
         const answer = this.getCurrentAnswer();
         const isCorrectGuess = answer && guess === answer;
 
-        input.value = '';
-        this.setState({
+        this.setState((prev) => ({
+            ...prev,
             guess,
+            currentInput: '',
             feedbackMessage: isCorrectGuess ? 'Correct! Nice work.' : 'is not the right answer. Try again!',
             feedbackClass: isCorrectGuess ? 'guess-input__feedback--correct' : 'guess-input__feedback--incorrect',
-        });
+        }));
 
         if (isCorrectGuess) {
-            this.setState({ roundFinished: true });
+            this.setState((prev) => ({ ...prev, roundFinished: true }));
             this.showResultModal('you won');
             return;
         }
@@ -90,11 +94,12 @@ class GuessInputComponent extends Elemental {
         roundService.getNextClue();
 
         if (nextGuessCount >= MAX_GUESSES) {
-            this.setState({
+            this.setState((prev) => ({
+                ...prev,
                 feedbackMessage: 'No more guesses left.',
                 feedbackClass: 'guess-input__feedback--incorrect',
                 roundFinished: true,
-            });
+            }));
             this.showResultModal('you lose');
             return;
         }
@@ -117,11 +122,6 @@ class GuessInputComponent extends Elemental {
         }
     }
 
-    onlyAllowLetterInput(event) {
-        const input = event.target;
-        input.value = input.value.replace(/[^A-Za-z]/g, '');
-    }
-
     handleGuessClick(event) {
         event.preventDefault();
         this.submitGuess();
@@ -141,8 +141,11 @@ class GuessInputComponent extends Elemental {
 
         .guess-input__guess {
             color: var(--text-muted);
-            font-size: 1.4rem;
-            min-height: 27px;
+            min-height: 29px;
+            font-size: 24px;
+            font-weight: 1000;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
         }
 
         .guess-input__guess--correct {
@@ -155,6 +158,7 @@ class GuessInputComponent extends Elemental {
 
         .guess-input__form {
             display: flex;
+            justify-content: center;
             gap: 8px;
         }
 
@@ -177,33 +181,30 @@ class GuessInputComponent extends Elemental {
         .guess-input__field {
             width: 100%;
             height: 50px;
-            border: 1px;
-            border: solid var(--border-primary);
-            border-top: none;
-            border-right: none;
-            border-left: none;
+            border-bottom: 4px solid var(--border-primary);
             padding: 0 14px;
             font-size: 20px;
             font-weight: 600;
-            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             background-color: var(--bg-surface);
             text-transform: uppercase;
             color: var(--text-primary);
-            outline: none;
-            caret-color: red;
         }
 
-        .guess-input__field::after {
-            content: "";
-            width: 5px;
-            height: 20px;
-            background: #ec7fff;
-            display: inline-block;
+        .guess-input__caret {
+            width: 4px;
+            height: 1.2em;
+            margin-left: 2px;
+            background: var(--text-primary);
+            animation: guess-input-caret-blink 1s steps(1, end) infinite;
         }
 
-        .guess-input__field::placeholder {
-            color: var(--text-muted);
-            text-transform: none;
+        @keyframes guess-input-caret-blink {
+            50% {
+                opacity: 0;
+            }
         }
     `;
 }

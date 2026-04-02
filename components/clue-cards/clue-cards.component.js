@@ -79,10 +79,10 @@ class ClueCardsComponent extends Elemental {
             height: 60px;
             box-shadow: var(--shadow-soft);
             border-radius: 12px;
-            font-size: 20px;
-            font-weight: 800;
-            letter-spacing: 0.02em;
-            text-transform: capitalize;
+            font-size: 24px;
+            font-weight: 1000;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
             color: black;
         }
 
