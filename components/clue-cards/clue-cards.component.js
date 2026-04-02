@@ -1,104 +1,113 @@
-import { BaseComponent } from '/components/base.component.js';
+import { Elemental } from '/elemental/elemental.min.js';
 import { roundService } from '/services/round.service.js';
 
-const template = document.createElement('template');
-template.innerHTML = /*html*/`
-    <div class="clue-cards__card clue-cards__card--cold">
-        <span data-bind="first">word 1</span>
-    </div>
 
-    <div class="clue-cards__card clue-cards__card--warm" data-class="unlockClue1">
-        <span data-bind="second">word 2</span>
-    </div>
+class ClueCardsComponent extends Elemental {
 
-    <div class="clue-cards__card clue-cards__card--warmer clue-cards__card--locked" data-class="unlockClue2">
-        <span data-bind="third">word 3</span>
-    </div>
+    static template = /*html*/`
+        <div class="clue-cards__card clue-cards__card--first">
+            <span><bind>first</bind></span>
+        </div>
 
-    <div class="clue-cards__card clue-cards__card--hot clue-cards__card--locked" data-class="unlockClue3">
-        <span data-bind="fourth">word 4</span>
-    </div>
-`;
+        <div class="clue-cards__card clue-cards__card--second" data-class="{ 'clue-cards__card--locked': unlockClue1 }">
+            <span><bind>second</bind></span>
+        </div>
 
-const styles = /*css*/`
-    :host(clue-cards) {
-        width: 100%;
-    }
+        <div class="clue-cards__card clue-cards__card--third" data-class="{ 'clue-cards__card--locked': unlockClue2 }">
+            <span><bind>third</bind></span>
+        </div>
 
-    .clue-cards__card {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin: 10px;
-        height: 70px;
-        background-image: linear-gradient(45deg, #e7f8f2 0%, #c0f2e0 100%);
-        box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
-        border: 2px solid #b2e8d7;
-        border-radius: 8px;
-        color: #00000082;
-        font-size: 16px;
-        font-weight: 600;
-    }
+        <div class="clue-cards__card clue-cards__card--fourth" data-class="{ 'clue-cards__card--locked': unlockClue3 }">
+            <span><bind>fourth</bind></span>
+        </div>
+    `;
 
-    .clue-cards__card--warm {
-        background-image: linear-gradient(45deg, #e0f7fa 0%, #b2ebf2 100%);
-        border-color: #80deea;
-    }
 
-    .clue-cards__card--warmer {
-        background-image: linear-gradient(45deg, #fff4e7 0%, #ffe1c6 100%);
-        border-color: #ffd1a9;
-    }
-
-    .clue-cards__card--hot {
-        background-image: linear-gradient(45deg, #fcefee 0%, #f8d7e0 100%);
-        border-color: #f5b2c2;
-    }
-
-    .clue-cards__card--locked {
-        opacity: 0.3;
-        box-shadow: none;
-    }
-`;
-
-class ClueCardsComponent extends BaseComponent {
-    constructor() {
-        super({template, styles});
-
-        this.props = {
+    static defaultProps() {
+        return {
             first: '',
             second: '',
             third: '',
             fourth: '',
-            unlockClue1: 'clue-cards__card--locked',
-            unlockClue2: 'clue-cards__card--locked',
-            unlockClue3: 'clue-cards__card--locked',
+            unlockClue1: true,
+            unlockClue2: true,
+            unlockClue3: true,
         };
     }
 
-    getClueCardsForRound() {
+    getClueCardState() {
+        const { clueCards } = roundService.getState();
+
+        return {
+            first: clueCards.first || '',
+            second: clueCards.second || '',
+            third: clueCards.third || '',
+            fourth: clueCards.fourth || '',
+            unlockClue1: roundService.guesses < 1,
+            unlockClue2: roundService.guesses < 2,
+            unlockClue3: roundService.guesses < 3,
+        };
+    }
+
+    loadRoundClues() {
         roundService.initialiseRound();
-        this.setProps({
-            ...roundService.getState().clueCards,
-            unlockClue: this.unlockClueStyle(true),
-        });
+
+        this.setState(this.getClueCardState());
     }
 
     connectedCallback() {
-        this.getClueCardsForRound();
-    }
-
-    unlockClueStyle(state) {
-        return state ? 'clue-cards__card--locked' : '';
+        super.connectedCallback();
+        this.loadRoundClues();
     }
 
     update() {
-        const unlockKey = `unlockClue${roundService.guesses}`;
-        this.setProps({
-            ...roundService.getState().clueCards,
-            [unlockKey]: this.unlockClueStyle(false),
-        });
+        this.setState(this.getClueCardState());
     }
+
+    
+    static styles = /*css*/`
+        :host(clue-cards) {
+            display: block;
+            width: 100%;
+        }
+
+        .clue-cards__card {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 10px 0;
+            height: 60px;
+            box-shadow: var(--shadow-soft);
+            border-radius: 12px;
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+            text-transform: capitalize;
+            color: black;
+        }
+
+        .clue-cards__card--first {
+            background: var(--clue-first-bg);
+        }
+
+        .clue-cards__card--second {
+            background: var(--clue-second-bg);
+        }
+
+        .clue-cards__card--third {
+            background: var(--clue-third-bg);
+        }
+
+        .clue-cards__card--fourth {
+            background: var(--clue-fourth-bg);
+        }
+
+        .clue-cards__card--locked {
+            opacity: 0.3;
+            filter: saturate(0.7);
+            box-shadow: none;
+        }
+    `;
 }
 
 customElements.define('clue-cards', ClueCardsComponent);

@@ -15,7 +15,7 @@ const clueOrder = ['first', 'second', 'third', 'fourth'];
 
 class RoundService {
     constructor() {
-        this.roundState = { ...initialState }; 
+        this.roundState = { ...initialState };
         this.guesses = 0;
     }
 

@@ -4,18 +4,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Daily Word Connection</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-    <clue-cards></clue-cards>
-    <guess-input></guess-input>
+    <main class="app">
+        <header class="app__header">
+            <h1 class="app__title">Daily Word Connection</h1>
+            <button class="app__theme-toggle" type="button" data-theme-toggle aria-label="Toggle light and dark theme">
+                Dark mode
+            </button>
+        </header>
+
+        <section class="app__content">
+            <clue-cards></clue-cards>
+            <guess-input></guess-input>
+        </section>
+
+        <result-modal></result-modal>
+    </main>
+
     <keyboard-component></keyboard-component>
 
-    <script type="module" src="./components/keyboard/keyboard.component.js"></script>
-    <script type="module" src="./components/clue-cards/clue-cards.component.js"></script>
-    <script type="module" src="./components/guess-input/guess-input.component.js"></script>
     <script type="module" src="./main.js"></script>
 </body>
 
