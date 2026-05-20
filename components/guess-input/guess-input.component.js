@@ -1,6 +1,6 @@
-import { Elemental } from '/elemental/elemental.min.js';
-import { roundService } from '/services/round.service.js';
-import { gameStateService } from '/services/game-state.service.js';
+import { Elemental } from '../../elemental/elemental.min.js';
+import { roundService } from '../../services/round.service.js';
+import { gameStateService } from '../../services/game-state.service.js';
 
 const KEY_ENTER = 'enter';
 const KEY_DELETE = 'delete';
