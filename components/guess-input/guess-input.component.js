@@ -1,5 +1,6 @@
 import { Elemental } from '/elemental/elemental.min.js';
 import { roundService } from '/services/round.service.js';
+import { gameStateService } from '/services/game-state.service.js';
 
 const KEY_ENTER = 'enter';
 const KEY_DELETE = 'delete';
@@ -24,13 +25,15 @@ class GuessInputComponent extends Elemental {
     `;
 
     static defaultProps() {
+        const savedState = gameStateService.getState();
+        const answer = roundService.getState()?.answer?.toUpperCase() || '';
         return {
-            guess: '',
-            currentInput: '',
-            feedbackMessage: '',
-            feedbackClass: '',
-            roundFinished: false,
-            answer: roundService.getState()?.answer.toUpperCase() || '',
+            guess: savedState.lastGuess || '',
+            currentInput: savedState.roundFinished ? '' : savedState.currentInput || '',
+            feedbackMessage: savedState.feedbackMessage || '',
+            feedbackClass: savedState.feedbackClass || '',
+            roundFinished: savedState.roundFinished || false,
+            answer: savedState.roundFinished ? answer : '',
         };
     }
 
@@ -86,12 +89,31 @@ class GuessInputComponent extends Elemental {
 
         if (isCorrectGuess) {
             this.setState((prev) => ({ ...prev, roundFinished: true }));
+            gameStateService.saveState({
+                guesses: roundService.guesses,
+                roundFinished: true,
+                won: true,
+                wonAttempts: roundService.guesses + 1,
+                currentInput: '',
+                lastGuess: guess,
+                feedbackMessage: 'Correct! Nice work.',
+                feedbackClass: 'guess-input__feedback--correct',
+            });
             this.showResultModal('you won');
             return;
         }
 
         const nextGuessCount = roundService.guesses + 1;
         roundService.getNextClue();
+        gameStateService.saveState({
+            guesses: roundService.guesses,
+            roundFinished: false,
+            won: false,
+            currentInput: '',
+            lastGuess: guess,
+            feedbackMessage: 'is not the right answer. Try again!',
+            feedbackClass: 'guess-input__feedback--incorrect',
+        });
 
         if (nextGuessCount >= MAX_GUESSES) {
             this.setState((prev) => ({
@@ -100,6 +122,16 @@ class GuessInputComponent extends Elemental {
                 feedbackClass: 'guess-input__feedback--incorrect',
                 roundFinished: true,
             }));
+            gameStateService.saveState({
+                guesses: roundService.guesses,
+                roundFinished: true,
+                won: false,
+                wonAttempts: null,
+                currentInput: '',
+                lastGuess: guess,
+                feedbackMessage: 'No more guesses left.',
+                feedbackClass: 'guess-input__feedback--incorrect',
+            });
             this.showResultModal('you lose');
             return;
         }

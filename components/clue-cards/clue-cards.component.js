@@ -1,5 +1,6 @@
 import { Elemental } from '/elemental/elemental.min.js';
 import { roundService } from '/services/round.service.js';
+import { gameStateService } from '/services/game-state.service.js';
 
 
 class ClueCardsComponent extends Elemental {
@@ -58,20 +59,21 @@ class ClueCardsComponent extends Elemental {
 
     getClueCardState() {
         const { clueCards } = roundService.getState();
+        const savedState = gameStateService.getState();
 
         return {
             first: clueCards.first || '',
             second: clueCards.second || '',
             third: clueCards.third || '',
             fourth: clueCards.fourth || '',
-            revealClue1: roundService.guesses >= 1,
-            revealClue2: roundService.guesses >= 2,
-            revealClue3: roundService.guesses >= 3,
+            revealClue1: savedState.roundFinished ? savedState.guesses >= 1 : roundService.guesses >= 1,
+            revealClue2: savedState.roundFinished ? savedState.guesses >= 2 : roundService.guesses >= 2,
+            revealClue3: savedState.roundFinished ? savedState.guesses >= 3 : roundService.guesses >= 3,
         };
     }
 
     loadRoundClues() {
-        roundService.initialiseRound();
+        roundService.initialiseFromSavedState();
 
         this.setState(this.getClueCardState());
     }

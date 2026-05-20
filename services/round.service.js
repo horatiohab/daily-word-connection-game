@@ -1,4 +1,5 @@
 import { roundsData } from '/data/rounds.data.js';
+import { gameStateService } from '/services/game-state.service.js';
 
 const initialState = {
     id: 1,
@@ -35,6 +36,14 @@ class RoundService {
             answer: roundData.answer,
             id: roundData.id,
         };
+    }
+
+    initialiseFromSavedState() {
+        const savedState = gameStateService.loadState();
+        if (savedState) {
+            this.guesses = savedState.guesses;
+        }
+        this.initialiseRound();
     }
 
     getNextClue() {
