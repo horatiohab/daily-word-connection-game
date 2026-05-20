@@ -1,5 +1,5 @@
-import { roundsData } from '/data/rounds.data.js';
-import { gameStateService } from '/services/game-state.service.js';
+import { roundsData } from '../data/rounds.data.js';
+import { gameStateService } from './game-state.service.js';
 
 const initialState = {
     id: 1,

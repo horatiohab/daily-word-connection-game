@@ -1,4 +1,4 @@
-import { Elemental } from '/elemental/elemental.min.js';
+import { Elemental } from '../../elemental/elemental.min.js';
 
 const HIDDEN_KEY = ' ';
 

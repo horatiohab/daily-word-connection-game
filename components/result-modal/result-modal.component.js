@@ -1,4 +1,4 @@
-import { Elemental } from '/elemental/elemental.min.js';
+import { Elemental } from '../../elemental/elemental.min.js';
 
 class ResultModalComponent extends Elemental {
     static template = /*html*/`
